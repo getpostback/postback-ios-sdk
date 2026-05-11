@@ -4,7 +4,7 @@ Pod::Spec.new do |s|
   s.summary          = 'AppSprint mobile attribution SDK for iOS'
   s.description      = 'Lightweight attribution SDK for iOS apps. Tracks installs, events, and attribution with offline support.'
   s.homepage         = 'https://appsprint.app'
-  s.license          = { :type => 'MIT', :file => 'LICENSE' }
+  s.license          = { :type => 'MIT' }
   s.author           = { 'AppSprint' => 'support@appsprint.app' }
   s.source           = {
     :http => "https://github.com/getappsprint/appsprint-ios-sdk/releases/download/v#{s.version}/AppSprintSDK.xcframework.zip"
