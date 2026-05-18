@@ -16,8 +16,8 @@ let package = Package(
     targets: [
         .binaryTarget(
             name: "AppSprintSDK",
-            url: "https://github.com/getappsprint/appsprint-ios-sdk/releases/download/v1.1.2/AppSprintSDK.xcframework.zip",
-            checksum: "0a3c4e7f12ed185d2a70a7c4227b5b9af4960a7a9f33074d0bac6ca033a88cd7"
+            url: "https://github.com/getappsprint/appsprint-ios-sdk/releases/download/v1.1.3/AppSprintSDK.xcframework.zip",
+            checksum: "0237ea24ec32c51c920cb71a19e074b1ab2c9444fe7ca77ca86b074ac62cc848"
         )
     ]
 )
