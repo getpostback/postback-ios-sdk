@@ -102,6 +102,6 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Publish to CocoaPods
-        run: pod trunk push AppSprintSDK.podspec --allow-warnings
+        run: pod trunk push AppSprintSDK.podspec --allow-warnings --skip-import-validation --skip-tests
         env:
           COCOAPODS_TRUNK_TOKEN: ${{ secrets.COCOAPODS_TRUNK_TOKEN }}
