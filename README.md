@@ -10,20 +10,20 @@ Add this package in Xcode:
 
 1. File > Add Package Dependencies
 2. Enter: `https://github.com/getappsprint/appsprint-ios-sdk`
-3. Select version rule: "Up to Next Major" from `1.1.3`
+3. Select version rule: "Up to Next Major" from `1.1.10`
 
 Or add to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/getappsprint/appsprint-ios-sdk", from: "1.1.3")
+    .package(url: "https://github.com/getappsprint/appsprint-ios-sdk", from: "1.1.10")
 ]
 ```
 
 ### CocoaPods
 
 ```ruby
-pod 'AppSprintSDK', '~> 1.1.3'
+pod 'AppSprintSDK', '~> 1.1.10'
 ```
 
 ## Quick Start
