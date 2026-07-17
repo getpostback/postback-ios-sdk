@@ -17,7 +17,7 @@ let package = Package(
         .binaryTarget(
             name: "PostbackSDK",
             url: "https://github.com/getpostback/postback-ios-sdk/releases/download/v1.0.0/PostbackSDK.xcframework.zip",
-            checksum: "d82a6e5deff5b34b060a4eec88753842733b724feb361c1a634d3fcbb531269a"
+            checksum: "50ea7244059e02795d1dbe43029cf262132633294982be7e3ff57655863f9412"
         )
     ]
 )
