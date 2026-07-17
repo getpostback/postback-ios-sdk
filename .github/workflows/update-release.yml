@@ -21,7 +21,7 @@ jobs:
       contents: write
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Set version from dispatch
         id: version
@@ -141,6 +141,20 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Publish to CocoaPods
-        run: pod trunk push PostbackSDK.podspec --allow-warnings --skip-import-validation --skip-tests
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          if pod trunk info PostbackSDK 2>/dev/null | grep -Fq -- "- ${VERSION} ("; then
+            echo "PostbackSDK ${VERSION} is already published"
+            exit 0
+          fi
+
+          if pod trunk push PostbackSDK.podspec --allow-warnings --skip-import-validation --skip-tests; then
+            exit 0
+          fi
+
+          # CocoaPods can accept a spec and still return an internal server
+          # error. Re-check trunk before treating the release as failed.
+          sleep 5
+          pod trunk info PostbackSDK | grep -Fq -- "- ${VERSION} ("
         env:
           COCOAPODS_TRUNK_TOKEN: ${{ secrets.COCOAPODS_TRUNK_TOKEN }}
