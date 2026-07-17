@@ -3,21 +3,21 @@
 import PackageDescription
 
 let package = Package(
-    name: "AppSprintSDK",
+    name: "PostbackSDK",
     platforms: [
         .iOS(.v14)
     ],
     products: [
         .library(
-            name: "AppSprintSDK",
-            targets: ["AppSprintSDK"]
+            name: "PostbackSDK",
+            targets: ["PostbackSDK"]
         )
     ],
     targets: [
         .binaryTarget(
-            name: "AppSprintSDK",
-            url: "https://github.com/getappsprint/appsprint-ios-sdk/releases/download/v1.1.10/AppSprintSDK.xcframework.zip",
-            checksum: "63a195b92d2f8aca3cf2546bb9d4f14b775facd245c5f0b6922ab0ee9d63abb0"
+            name: "PostbackSDK",
+            url: "https://github.com/getpostback/postback-ios-sdk/releases/download/v1.0.0/PostbackSDK.xcframework.zip",
+            checksum: "d82a6e5deff5b34b060a4eec88753842733b724feb361c1a634d3fcbb531269a"
         )
     ]
 )

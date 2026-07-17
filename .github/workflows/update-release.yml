@@ -40,21 +40,21 @@ jobs:
       - name: Download XCFramework and compute checksum
         id: checksum
         run: |
-          curl -fL --retry 3 --retry-delay 5 -o AppSprintSDK.xcframework.zip "${{ steps.version.outputs.url }}"
-          unzip -t AppSprintSDK.xcframework.zip >/dev/null
+          curl -fL --retry 3 --retry-delay 5 -o PostbackSDK.xcframework.zip "${{ steps.version.outputs.url }}"
+          unzip -t PostbackSDK.xcframework.zip >/dev/null
           TMP_DIR="$(mktemp -d)"
-          unzip -q AppSprintSDK.xcframework.zip -d "$TMP_DIR"
+          unzip -q PostbackSDK.xcframework.zip -d "$TMP_DIR"
 
-          DEVICE_BINARY="$TMP_DIR/AppSprintSDK.xcframework/ios-arm64/AppSprintSDK.framework/AppSprintSDK"
-          DEVICE_DSYM="$TMP_DIR/AppSprintSDK.xcframework/ios-arm64/dSYMs/AppSprintSDK.framework.dSYM"
-          SIM_BINARY="$TMP_DIR/AppSprintSDK.xcframework/ios-arm64_x86_64-simulator/AppSprintSDK.framework/AppSprintSDK"
-          SIM_DSYM="$TMP_DIR/AppSprintSDK.xcframework/ios-arm64_x86_64-simulator/dSYMs/AppSprintSDK.framework.dSYM"
+          DEVICE_BINARY="$TMP_DIR/PostbackSDK.xcframework/ios-arm64/PostbackSDK.framework/PostbackSDK"
+          DEVICE_DSYM="$TMP_DIR/PostbackSDK.xcframework/ios-arm64/dSYMs/PostbackSDK.framework.dSYM"
+          SIM_BINARY="$TMP_DIR/PostbackSDK.xcframework/ios-arm64_x86_64-simulator/PostbackSDK.framework/PostbackSDK"
+          SIM_DSYM="$TMP_DIR/PostbackSDK.xcframework/ios-arm64_x86_64-simulator/dSYMs/PostbackSDK.framework.dSYM"
 
           for REQUIRED_PATH in \
             "$DEVICE_BINARY" \
-            "$DEVICE_DSYM/Contents/Resources/DWARF/AppSprintSDK" \
+            "$DEVICE_DSYM/Contents/Resources/DWARF/PostbackSDK" \
             "$SIM_BINARY" \
-            "$SIM_DSYM/Contents/Resources/DWARF/AppSprintSDK"
+            "$SIM_DSYM/Contents/Resources/DWARF/PostbackSDK"
           do
             test -e "$REQUIRED_PATH"
           done
@@ -77,16 +77,16 @@ jobs:
 
           verify_dsym_uuids "$DEVICE_BINARY" "$DEVICE_DSYM" "device"
           verify_dsym_uuids "$SIM_BINARY" "$SIM_DSYM" "simulator"
-          CHECKSUM=$(swift package compute-checksum AppSprintSDK.xcframework.zip)
+          CHECKSUM=$(swift package compute-checksum PostbackSDK.xcframework.zip)
           echo "checksum=$CHECKSUM" >> "$GITHUB_OUTPUT"
-          rm AppSprintSDK.xcframework.zip
+          rm PostbackSDK.xcframework.zip
 
       - name: Update Package.swift
         run: |
           RELEASE_TAG="${{ steps.version.outputs.release_tag }}"
           CHECKSUM="${{ steps.checksum.outputs.checksum }}"
           VERSION="${{ steps.version.outputs.version }}"
-          sed -i '' "s|url: \".*\"|url: \"https://github.com/getappsprint/appsprint-ios-sdk/releases/download/${RELEASE_TAG}/AppSprintSDK.xcframework.zip\"|" Package.swift
+          sed -i '' "s|url: \".*\"|url: \"https://github.com/getpostback/postback-ios-sdk/releases/download/${RELEASE_TAG}/PostbackSDK.xcframework.zip\"|" Package.swift
           sed -i '' "s|checksum: \".*\"|checksum: \"${CHECKSUM}\"|" Package.swift
           sed -i '' "s/from: \"[0-9][0-9.]*\"/from: \"${VERSION}\"/" README.md
           sed -i '' "s/from \`[0-9][0-9.]*\`/from \`${VERSION}\`/" README.md
@@ -95,7 +95,7 @@ jobs:
       - name: Update podspec version
         run: |
           VERSION="${{ steps.version.outputs.version }}"
-          sed -i '' "s/s.version          = '.*'/s.version          = '${VERSION}'/" AppSprintSDK.podspec
+          sed -i '' "s/s.version          = '.*'/s.version          = '${VERSION}'/" PostbackSDK.podspec
 
       - name: Commit and tag
         run: |
@@ -103,7 +103,7 @@ jobs:
           RELEASE_TAG="${{ steps.version.outputs.release_tag }}"
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add Package.swift AppSprintSDK.podspec README.md
+          git add Package.swift PostbackSDK.podspec README.md
           if git diff --cached --quiet; then
             echo "No package metadata changes for ${RELEASE_TAG}"
             PACKAGE_CHANGED=false
@@ -126,21 +126,21 @@ jobs:
         run: |
           VERSION="${{ steps.version.outputs.version }}"
           RELEASE_TAG="${{ steps.version.outputs.release_tag }}"
-          curl -fL --retry 3 --retry-delay 5 -o AppSprintSDK.xcframework.zip "${{ steps.version.outputs.url }}"
-          unzip -t AppSprintSDK.xcframework.zip >/dev/null
+          curl -fL --retry 3 --retry-delay 5 -o PostbackSDK.xcframework.zip "${{ steps.version.outputs.url }}"
+          unzip -t PostbackSDK.xcframework.zip >/dev/null
           if gh release view "${RELEASE_TAG}" >/dev/null 2>&1; then
-            gh release upload "${RELEASE_TAG}" AppSprintSDK.xcframework.zip --clobber
+            gh release upload "${RELEASE_TAG}" PostbackSDK.xcframework.zip --clobber
           else
             gh release create "${RELEASE_TAG}" \
-              AppSprintSDK.xcframework.zip \
-              --title "AppSprintSDK ${RELEASE_TAG}" \
-              --notes "Binary XCFramework for AppSprintSDK ${VERSION}. Includes matching dSYMs for App Store Connect upload validation."
+              PostbackSDK.xcframework.zip \
+              --title "PostbackSDK ${RELEASE_TAG}" \
+              --notes "Binary XCFramework for PostbackSDK ${VERSION}. Includes matching dSYMs for App Store Connect upload validation."
           fi
-          rm AppSprintSDK.xcframework.zip
+          rm PostbackSDK.xcframework.zip
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Publish to CocoaPods
-        run: pod trunk push AppSprintSDK.podspec --allow-warnings --skip-import-validation --skip-tests
+        run: pod trunk push PostbackSDK.podspec --allow-warnings --skip-import-validation --skip-tests
         env:
           COCOAPODS_TRUNK_TOKEN: ${{ secrets.COCOAPODS_TRUNK_TOKEN }}

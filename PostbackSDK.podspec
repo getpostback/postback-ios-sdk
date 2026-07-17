@@ -1,15 +1,15 @@
 Pod::Spec.new do |s|
-  s.name             = 'AppSprintSDK'
-  s.version          = '1.1.10'
-  s.summary          = 'AppSprint mobile attribution SDK for iOS'
+  s.name             = 'PostbackSDK'
+  s.version          = '1.0.0'
+  s.summary          = 'Postback mobile attribution SDK for iOS'
   s.description      = 'Lightweight attribution SDK for iOS apps. Tracks installs, events, and attribution with offline support.'
-  s.homepage         = 'https://appsprint.app'
+  s.homepage         = 'https://postback.sh'
   s.license          = {
     :type => 'MIT',
     :text => <<-LICENSE
 MIT License
 
-Copyright (c) 2026 AppSprint
+Copyright (c) 2026 Postback
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -30,13 +30,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
     LICENSE
   }
-  s.author           = { 'AppSprint' => 'support@appsprint.app' }
+  s.author           = { 'Postback' => 'support@postback.sh' }
   s.source           = {
-    :http => "https://github.com/getappsprint/appsprint-ios-sdk/releases/download/v#{s.version}/AppSprintSDK.xcframework.zip"
+    :http => "https://github.com/getpostback/postback-ios-sdk/releases/download/v#{s.version}/PostbackSDK.xcframework.zip"
   }
 
   s.ios.deployment_target = '14.0'
-  s.vendored_frameworks = 'AppSprintSDK.xcframework'
+  s.vendored_frameworks = 'PostbackSDK.xcframework'
   s.swift_version = '5.9'
 
   s.frameworks = 'Foundation', 'UIKit', 'CoreTelephony', 'Metal', 'CoreGraphics', 'CryptoKit'

@@ -1,4 +1,4 @@
-# AppSprint iOS SDK
+# Postback iOS SDK
 
 Lightweight mobile attribution SDK for iOS. Tracks installs, events, and campaign attribution with offline support and Apple Ads integration.
 
@@ -9,37 +9,37 @@ Lightweight mobile attribution SDK for iOS. Tracks installs, events, and campaig
 Add this package in Xcode:
 
 1. File > Add Package Dependencies
-2. Enter: `https://github.com/getappsprint/appsprint-ios-sdk`
-3. Select version rule: "Up to Next Major" from `1.1.10`
+2. Enter: `https://github.com/getpostback/postback-ios-sdk`
+3. Select version rule: "Up to Next Major" from `1.0.0`
 
 Or add to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/getappsprint/appsprint-ios-sdk", from: "1.1.10")
+    .package(url: "https://github.com/getpostback/postback-ios-sdk", from: "1.0.0")
 ]
 ```
 
 ### CocoaPods
 
 ```ruby
-pod 'AppSprintSDK', '~> 1.1.10'
+pod 'PostbackSDK', '~> 1.0.0'
 ```
 
 ## Quick Start
 
 ```swift
-import AppSprintSDK
+import PostbackSDK
 
 // Configure on app launch
-let config = AppSprintConfig(apiKey: "as_live_your_api_key")
-await AppSprint.shared.configure(config)
+let config = PostbackConfig(apiKey: "pb_live_your_api_key")
+await Postback.shared.configure(config)
 
 // Track events
-await AppSprint.shared.sendEvent(.purchase, name: "premium_upgrade", params: ["price": 9.99])
+await Postback.shared.sendEvent(.purchase, name: "premium_upgrade", params: ["price": 9.99])
 
 // Get attribution
-if let attribution = AppSprint.shared.getAttribution() {
+if let attribution = Postback.shared.getAttribution() {
     print("Source: \(attribution.source)")
 }
 ```
@@ -47,9 +47,9 @@ if let attribution = AppSprint.shared.getAttribution() {
 ## Configuration
 
 ```swift
-let config = AppSprintConfig(
-    apiKey: "as_live_...",                    // Required
-    apiURL: URL(string: "https://api.appsprint.app")!,  // Default
+let config = PostbackConfig(
+    apiKey: "pb_live_...",                    // Required
+    apiURL: URL(string: "https://api.postback.sh")!,  // Default
     enableAppleAdsAttribution: true,          // Default: true
     isDebug: false,                           // Default: false
     logLevel: .warn,                          // Default: .warn
@@ -66,28 +66,28 @@ let config = AppSprintConfig(
 
 ```swift
 // Lifecycle
-AppSprint.shared.configure(_ config: AppSprintConfig) async
-AppSprint.shared.destroy()
-AppSprint.shared.isInitialized -> Bool
+Postback.shared.configure(_ config: PostbackConfig) async
+Postback.shared.destroy()
+Postback.shared.isInitialized -> Bool
 
 // Events
-AppSprint.shared.sendEvent(_ type: AppSprintEventType, name: String?, params: [String: Any]?) async
-AppSprint.shared.sendTestEvent() async -> TestEventResult
-AppSprint.shared.flush() async
+Postback.shared.sendEvent(_ type: PostbackEventType, name: String?, params: [String: Any]?) async
+Postback.shared.sendTestEvent() async -> TestEventResult
+Postback.shared.flush() async
 
 // Attribution
-AppSprint.shared.getAttribution() -> AttributionResult?
-AppSprint.shared.getAttributionParams() -> [String: String]
-AppSprint.shared.getAppSprintId() -> String?
-AppSprint.shared.refreshAttribution() async -> AttributionResult?
-AppSprint.shared.enableAppleAdsAttribution() -> Bool
+Postback.shared.getAttribution() -> AttributionResult?
+Postback.shared.getAttributionParams() -> [String: String]
+Postback.shared.getPostbackId() -> String?
+Postback.shared.refreshAttribution() async -> AttributionResult?
+Postback.shared.enableAppleAdsAttribution() -> Bool
 
 // User
-AppSprint.shared.setCustomerUserId(_ userId: String) async
+Postback.shared.setCustomerUserId(_ userId: String) async
 
 // State
-AppSprint.shared.isSdkDisabled() -> Bool
-AppSprint.shared.clearData()
+Postback.shared.isSdkDisabled() -> Bool
+Postback.shared.clearData()
 ```
 
 ### Event Types
@@ -101,17 +101,17 @@ The XCFramework ships a `PrivacyInfo.xcprivacy` manifest. Match these entries in
 | Manifest entry | What it declares |
 |---|---|
 | `NSPrivacyAccessedAPICategoryUserDefaults` (reason `CA92.1`) | The SDK reads/writes its own `UserDefaults` keys for install state, queued events, attribution cache, and retry flags. |
-| `NSPrivacyCollectedDataTypeDeviceID` (Linked, Tracking) | IDFA (when ATT is authorized), IDFV, and the SDK's own `appsprintId` are collected for analytics and third-party advertising attribution. |
+| `NSPrivacyCollectedDataTypeDeviceID` (Linked, Tracking) | IDFA (when ATT is authorized), IDFV, and the SDK's own `postbackId` are collected for analytics and third-party advertising attribution. |
 | `NSPrivacyCollectedDataTypeProductInteraction` (Linked, Tracking) | Event names, params, revenue, currency, and timestamps collected for analytics and third-party advertising attribution. |
 | `NSPrivacyCollectedDataTypeUserID` (Linked, Tracking) | `customerUserId`, when configured by the host app, is collected for install/event linking and attribution exports. |
 | `NSPrivacyCollectedDataTypeCoarseLocation` (Linked, Tracking) | Server-side request metadata can derive coarse geography for analytics and attribution reporting. |
 | `NSPrivacyCollectedDataTypeOtherDataTypes` (Linked, Tracking) | Custom event parameters are developer-defined and may include app-specific analytics fields. |
 | `NSPrivacyTracking: true` | The SDK is a tracking SDK in Apple's terminology. |
-| `NSPrivacyTrackingDomains` | `api.appsprint.app` - the SDK's ingest endpoint. |
+| `NSPrivacyTrackingDomains` | `api.postback.sh` - the SDK's ingest endpoint. |
 
 Required host-app `Info.plist` entries:
 
-- `NSUserTrackingUsageDescription` is required if you call `AppSprintNative.requestTrackingAuthorization()` or otherwise request IDFA access.
+- `NSUserTrackingUsageDescription` is required if you call `PostbackNative.requestTrackingAuthorization()` or otherwise request IDFA access.
 - `NSAdvertisingAttributionReportEndpoint` is required if you use SKAdNetwork postbacks.
 
 Do not put raw user PII into `params` for `sendEvent` or into `customerUserId`. Both are persisted to `UserDefaults` for retry durability; Apple documents `UserDefaults` as storage for nonsensitive settings.
