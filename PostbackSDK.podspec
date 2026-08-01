@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name             = 'PostbackSDK'
-  s.version          = '1.0.0'
+  s.version          = '1.0.1'
   s.summary          = 'Postback mobile attribution SDK for iOS'
   s.description      = 'Lightweight attribution SDK for iOS apps. Tracks installs, events, and attribution with offline support.'
   s.homepage         = 'https://postback.sh'
