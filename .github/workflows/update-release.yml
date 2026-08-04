@@ -1,7 +1,8 @@
-name: Update Release
+name: Publish CocoaPods
 
-# Triggered by the private iOS repo's release workflow via repository_dispatch,
-# or manually with a version input.
+# The private iOS release workflow is the sole owner of this repository's
+# metadata, tag, and GitHub Release asset. This workflow verifies that immutable
+# public release, then publishes the matching podspec to CocoaPods.
 on:
   repository_dispatch:
     types: [ios-release]
@@ -10,36 +11,49 @@ on:
       version:
         description: 'Release version (e.g. 0.2.0)'
         required: true
-      xcframework_url:
-        description: 'URL to XCFramework zip'
-        required: true
+
+concurrency:
+  group: ios-public-release-${{ github.event.client_payload.version || inputs.version }}
+  cancel-in-progress: false
 
 jobs:
   update:
     runs-on: macos-latest
     permissions:
-      contents: write
+      contents: read
 
     steps:
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
 
       - name: Set version from dispatch
         id: version
+        env:
+          DISPATCH_VERSION: ${{ github.event.client_payload.version }}
+          INPUT_VERSION: ${{ inputs.version }}
         run: |
+          set -euo pipefail
+
           if [ "${{ github.event_name }}" = "repository_dispatch" ]; then
-            RAW_VERSION="${{ github.event.client_payload.version }}"
-            echo "url=${{ github.event.client_payload.xcframework_url }}" >> "$GITHUB_OUTPUT"
+            RAW_VERSION="${DISPATCH_VERSION}"
           else
-            RAW_VERSION="${{ github.event.inputs.version }}"
-            echo "url=${{ github.event.inputs.xcframework_url }}" >> "$GITHUB_OUTPUT"
+            RAW_VERSION="${INPUT_VERSION}"
           fi
           VERSION="${RAW_VERSION#v}"
+          if ! [[ "${VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Invalid release version: ${RAW_VERSION}" >&2
+            exit 1
+          fi
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
           echo "release_tag=v${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "url=https://github.com/getpostback/postback-ios-sdk/releases/download/v${VERSION}/PostbackSDK.xcframework.zip" >> "$GITHUB_OUTPUT"
 
       - name: Download XCFramework and compute checksum
         id: checksum
         run: |
+          set -euo pipefail
+
           curl -fL --retry 3 --retry-delay 5 -o PostbackSDK.xcframework.zip "${{ steps.version.outputs.url }}"
           unzip -t PostbackSDK.xcframework.zip >/dev/null
           TMP_DIR="$(mktemp -d)"
@@ -79,69 +93,39 @@ jobs:
           verify_dsym_uuids "$SIM_BINARY" "$SIM_DSYM" "simulator"
           CHECKSUM=$(swift package compute-checksum PostbackSDK.xcframework.zip)
           echo "checksum=$CHECKSUM" >> "$GITHUB_OUTPUT"
-          rm PostbackSDK.xcframework.zip
 
-      - name: Update Package.swift
+      - name: Verify immutable public release
         run: |
+          set -euo pipefail
+
           RELEASE_TAG="${{ steps.version.outputs.release_tag }}"
           CHECKSUM="${{ steps.checksum.outputs.checksum }}"
           VERSION="${{ steps.version.outputs.version }}"
-          sed -i '' "s|url: \".*\"|url: \"https://github.com/getpostback/postback-ios-sdk/releases/download/${RELEASE_TAG}/PostbackSDK.xcframework.zip\"|" Package.swift
-          sed -i '' "s|checksum: \".*\"|checksum: \"${CHECKSUM}\"|" Package.swift
-          sed -i '' "s/from: \"[0-9][0-9.]*\"/from: \"${VERSION}\"/" README.md
-          sed -i '' "s/from \`[0-9][0-9.]*\`/from \`${VERSION}\`/" README.md
-          sed -i '' "s/~> [0-9][0-9.]*/~> ${VERSION}/" README.md
+          ASSET_URL="${{ steps.version.outputs.url }}"
 
-      - name: Update podspec version
-        run: |
-          VERSION="${{ steps.version.outputs.version }}"
-          sed -i '' "s/s.version          = '.*'/s.version          = '${VERSION}'/" PostbackSDK.podspec
+          git fetch --quiet origin "refs/tags/${RELEASE_TAG}:refs/tags/${RELEASE_TAG}"
+          git checkout --quiet --detach "${RELEASE_TAG}"
 
-      - name: Commit and tag
-        run: |
-          VERSION="${{ steps.version.outputs.version }}"
-          RELEASE_TAG="${{ steps.version.outputs.release_tag }}"
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add Package.swift PostbackSDK.podspec README.md
-          if git diff --cached --quiet; then
-            echo "No package metadata changes for ${RELEASE_TAG}"
-            PACKAGE_CHANGED=false
-          else
-            git commit -m "Release ${RELEASE_TAG}"
-            git push origin main
-            PACKAGE_CHANGED=true
-          fi
-          if [ "${PACKAGE_CHANGED}" = "true" ]; then
-            git tag -f "${RELEASE_TAG}"
-            git push origin "refs/tags/${RELEASE_TAG}" --force
-          elif git ls-remote --exit-code --tags origin "refs/tags/${RELEASE_TAG}" >/dev/null 2>&1; then
-            echo "Tag ${RELEASE_TAG} already exists"
-          else
-            git tag "${RELEASE_TAG}"
-            git push origin "${RELEASE_TAG}"
-          fi
+          grep -Fq "url: \"${ASSET_URL}\"" Package.swift
+          grep -Fq "checksum: \"${CHECKSUM}\"" Package.swift
+          grep -Fq "s.version          = '${VERSION}'" PostbackSDK.podspec
+          grep -Fq "from: \"${VERSION}\"" README.md
+          grep -Fq "from \`${VERSION}\`" README.md
+          grep -Fq "~> ${VERSION}" README.md
 
-      - name: Re-upload XCFramework to this repo's release
-        run: |
-          VERSION="${{ steps.version.outputs.version }}"
-          RELEASE_TAG="${{ steps.version.outputs.release_tag }}"
-          curl -fL --retry 3 --retry-delay 5 -o PostbackSDK.xcframework.zip "${{ steps.version.outputs.url }}"
-          unzip -t PostbackSDK.xcframework.zip >/dev/null
-          if gh release view "${RELEASE_TAG}" >/dev/null 2>&1; then
-            gh release upload "${RELEASE_TAG}" PostbackSDK.xcframework.zip --clobber
-          else
-            gh release create "${RELEASE_TAG}" \
-              PostbackSDK.xcframework.zip \
-              --title "PostbackSDK ${RELEASE_TAG}" \
-              --notes "Binary XCFramework for PostbackSDK ${VERSION}. Includes matching dSYMs for App Store Connect upload validation."
+          RELEASE_TAG_NAME="$(gh release view "${RELEASE_TAG}" --json tagName --jq '.tagName')"
+          RELEASE_IS_DRAFT="$(gh release view "${RELEASE_TAG}" --json isDraft --jq '.isDraft')"
+          if [ "${RELEASE_TAG_NAME}" != "${RELEASE_TAG}" ] || [ "${RELEASE_IS_DRAFT}" != "false" ]; then
+            echo "Unexpected GitHub Release state: tag=${RELEASE_TAG_NAME}, draft=${RELEASE_IS_DRAFT}" >&2
+            exit 1
           fi
-          rm PostbackSDK.xcframework.zip
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Publish to CocoaPods
         run: |
+          set -euo pipefail
+
           VERSION="${{ steps.version.outputs.version }}"
           if pod trunk info PostbackSDK 2>/dev/null | grep -Fq -- "- ${VERSION} ("; then
             echo "PostbackSDK ${VERSION} is already published"

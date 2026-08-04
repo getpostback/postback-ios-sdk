@@ -2,6 +2,8 @@
 
 Lightweight mobile attribution SDK for iOS. Tracks installs, events, and campaign attribution with offline support and Apple Ads integration.
 
+The SDK does not import AppTrackingTransparency or AdSupport, request ATT permission, access IDFA or IDFV, or use device fingerprint matching. Apple Ads attribution uses Apple's AdServices framework.
+
 ## Installation
 
 ### Swift Package Manager (Recommended)
@@ -94,25 +96,31 @@ Postback.shared.clearData()
 
 `sessionStart`, `login`, `signUp`, `register`, `purchase`, `subscribe`, `startTrial`, `addPaymentInfo`, `addToCart`, `addToWishlist`, `initiateCheckout`, `viewContent`, `viewItem`, `search`, `share`, `tutorialComplete`, `achieveLevel`, `levelStart`, `levelComplete`, `custom`
 
+### Event Validation (1.0.1+)
+
+- Custom events require a `name`. The SDK trims leading and trailing whitespace, then requires 1 through 255 UTF-16 code units and rejects names containing a NUL (`U+0000`) character. Invalid custom events are not queued or sent.
+- Names on built-in events are optional. The SDK trims a valid name and omits an invalid one while still sending the event.
+- `currency` is optional. When present, it is trimmed, must contain exactly three ASCII letters (`A-Z` or `a-z`), and is normalized to uppercase. An invalid currency is omitted while the event is still sent.
+- Events queued by an older SDK are revalidated when they flush. Invalid legacy custom events are dropped, and invalid legacy names on built-in events are omitted.
+
 ## Privacy
 
-The XCFramework ships a `PrivacyInfo.xcprivacy` manifest. Match these entries in your App Store privacy details when you submit a build:
+The XCFramework ships a `PrivacyInfo.xcprivacy` manifest, which declares:
 
 | Manifest entry | What it declares |
 |---|---|
 | `NSPrivacyAccessedAPICategoryUserDefaults` (reason `CA92.1`) | The SDK reads/writes its own `UserDefaults` keys for install state, queued events, attribution cache, and retry flags. |
-| `NSPrivacyCollectedDataTypeDeviceID` (Linked, Tracking) | IDFA (when ATT is authorized), IDFV, and the SDK's own `postbackId` are collected for analytics and third-party advertising attribution. |
-| `NSPrivacyCollectedDataTypeProductInteraction` (Linked, Tracking) | Event names, params, revenue, currency, and timestamps collected for analytics and third-party advertising attribution. |
-| `NSPrivacyCollectedDataTypeUserID` (Linked, Tracking) | `customerUserId`, when configured by the host app, is collected for install/event linking and attribution exports. |
-| `NSPrivacyCollectedDataTypeCoarseLocation` (Linked, Tracking) | Server-side request metadata can derive coarse geography for analytics and attribution reporting. |
-| `NSPrivacyCollectedDataTypeOtherDataTypes` (Linked, Tracking) | Custom event parameters are developer-defined and may include app-specific analytics fields. |
-| `NSPrivacyTracking: true` | The SDK is a tracking SDK in Apple's terminology. |
-| `NSPrivacyTrackingDomains` | `api.postback.sh` - the SDK's ingest endpoint. |
+| `NSPrivacyCollectedDataTypeDeviceID` (Linked, Not Tracking) | The SDK's random app-install identifier, `postbackId`. |
+| `NSPrivacyCollectedDataTypeProductInteraction` (Linked, Not Tracking) | Event names, params, revenue, currency, and timestamps. |
+| `NSPrivacyCollectedDataTypeUserID` (Linked, Not Tracking) | `customerUserId`, when configured by the host app. |
+| `NSPrivacyCollectedDataTypeCoarseLocation` (Linked, Not Tracking) | Server-derived country and region from request metadata. |
+| `NSPrivacyCollectedDataTypeOtherDataTypes` (Linked, Not Tracking) | SDK/platform, OS/app version, attribution results, optional Google Ads consent values, and developer-defined custom event params. |
+| `NSPrivacyTracking` | `false` |
+| `NSPrivacyTrackingDomains` | Not declared. The core Postback API domain is not marked as a tracking domain. |
 
-Required host-app `Info.plist` entries:
+Match these entries in your App Store privacy answers for your specific app and enabled integrations. Postback is infrastructure you configure; if you use Postback data for advertising measurement, ad network uploads, or another purpose that changes your app's privacy posture, update your own disclosures and consent flow accordingly.
 
-- `NSUserTrackingUsageDescription` is required if you call `PostbackNative.requestTrackingAuthorization()` or otherwise request IDFA access.
-- `NSAdvertisingAttributionReportEndpoint` is required if you use SKAdNetwork postbacks.
+Postback does not require `NSUserTrackingUsageDescription`. If another SDK or another part of your app tracks users, disclose and obtain any permissions required for that separate behavior.
 
 Do not put raw user PII into `params` for `sendEvent` or into `customerUserId`. Both are persisted to `UserDefaults` for retry durability; Apple documents `UserDefaults` as storage for nonsensitive settings.
 
