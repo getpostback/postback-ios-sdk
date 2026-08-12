@@ -14,20 +14,20 @@ Add this package in Xcode:
 
 1. File > Add Package Dependencies
 2. Enter: `https://github.com/getpostback/postback-ios-sdk`
-3. Select version rule: "Up to Next Major" from `1.0.2`
+3. Select version rule: "Up to Next Major" from `1.1.0`
 
 Or add to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/getpostback/postback-ios-sdk", from: "1.0.2")
+    .package(url: "https://github.com/getpostback/postback-ios-sdk", from: "1.1.0")
 ]
 ```
 
 ### CocoaPods
 
 ```ruby
-pod 'PostbackSDK', '~> 1.0.2'
+pod 'PostbackSDK', '~> 1.1.0'
 ```
 
 ## Quick Start
