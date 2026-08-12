@@ -1,10 +1,6 @@
 # Postback iOS SDK
 
-Lightweight mobile attribution SDK for iOS. Tracks installs, events, and campaign attribution with offline support and Apple Ads integration.
-
-Production builds do not import AppTrackingTransparency, inspect ATT status, request ATT permission, or link AdSupport. They omit IDFA, IDFV, WebView user agent, exact hardware model, screen, processor/memory, battery/power, language/locale/timezone, GPU, network/radio, appearance, and other fingerprint inputs. Apple Ads attribution uses Apple's privacy-preserving AdServices token.
-
-Install registration sends the random Postback install identifier, conservative install lifecycle classification, SDK/platform, OS and app versions, Apple AdServices token when enabled, and developer-provided event or customer identifiers. The framework keeps source-compatible diagnostic properties, but production collection returns high-entropy values as `nil` and the serialization boundary drops injected values.
+Lightweight mobile attribution SDK for iOS. Tracks installs, events, and campaign attribution with offline support, device-context matching, and Apple Ads integration.
 
 ## Installation
 
@@ -14,20 +10,20 @@ Add this package in Xcode:
 
 1. File > Add Package Dependencies
 2. Enter: `https://github.com/getpostback/postback-ios-sdk`
-3. Select version rule: "Up to Next Major" from `1.1.0`
+3. Select version rule: "Up to Next Major" from `2.0.0`
 
 Or add to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/getpostback/postback-ios-sdk", from: "1.1.0")
+    .package(url: "https://github.com/getpostback/postback-ios-sdk", from: "2.0.0")
 ]
 ```
 
 ### CocoaPods
 
 ```ruby
-pod 'PostbackSDK', '~> 1.1.0'
+pod 'PostbackSDK', '~> 2.0.0'
 ```
 
 ## Quick Start
@@ -107,21 +103,7 @@ Postback.shared.clearData()
 
 ## Privacy
 
-The XCFramework ships a `PrivacyInfo.xcprivacy` manifest, which declares:
-
-| Manifest entry | What it declares |
-|---|---|
-| `NSPrivacyAccessedAPICategoryUserDefaults` (reason `CA92.1`) | The SDK reads/writes its own `UserDefaults` keys for install state, queued events, attribution cache, and retry flags. |
-| `NSPrivacyCollectedDataTypeDeviceID` (Linked, Not Tracking) | The SDK's random app-install identifier, `postbackId`; production omits IDFA and IDFV. |
-| `NSPrivacyCollectedDataTypeProductInteraction` (Linked, Not Tracking) | Event names, params, revenue, currency, and timestamps. |
-| `NSPrivacyCollectedDataTypeUserID` (Linked, Not Tracking) | `customerUserId`, when configured by the host app. |
-| `NSPrivacyCollectedDataTypeOtherDataTypes` (Linked, Not Tracking) | SDK/platform, OS/app version, attribution results, optional Google Ads consent values, and developer-defined event data. |
-| `NSPrivacyTracking` | `false`; production does not collect the internal fingerprint bundle or perform cross-company tracking. |
-| `NSPrivacyTrackingDomains` | Not declared. |
-
-Match these entries in your App Store privacy answers for your specific app and enabled integrations. Postback is infrastructure you configure; if you use Postback data for advertising measurement, ad network uploads, or another purpose that changes your app's privacy posture, update your own disclosures and consent flow accordingly.
-
-Postback does not require `NSUserTrackingUsageDescription`. If another SDK or another part of your app tracks users, disclose and obtain any permissions required for that separate behavior. Host apps remain responsible for privacy labels covering their complete data practices.
+Postback does not show an ATT prompt. IDFA is used only if the host app already has authorized access; Apple Ads attribution works through AdServices independently. Data handling is described in the [Postback Privacy Policy](https://postback.sh/privacy). Host apps remain responsible for their own App Store privacy answers, notices, and permissions.
 
 Do not put raw user PII into `params` for `sendEvent` or into `customerUserId`. Both are persisted to `UserDefaults` for retry durability; Apple documents `UserDefaults` as storage for nonsensitive settings.
 

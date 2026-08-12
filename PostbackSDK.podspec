@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name             = 'PostbackSDK'
-  s.version          = '1.1.0'
+  s.version          = '2.0.0'
   s.summary          = 'Postback mobile attribution SDK for iOS'
   s.description      = 'Lightweight attribution SDK for iOS apps. Tracks installs, events, and attribution with offline support.'
   s.homepage         = 'https://postback.sh'
@@ -39,6 +39,6 @@ SOFTWARE.
   s.vendored_frameworks = 'PostbackSDK.xcframework'
   s.swift_version = '5.9'
 
-  s.frameworks = 'Foundation', 'UIKit', 'Security', 'CryptoKit'
-  s.weak_frameworks = 'StoreKit', 'AdServices'
+  s.frameworks = 'Foundation', 'UIKit', 'CoreTelephony', 'Metal', 'Network', 'WebKit', 'CoreGraphics', 'Security', 'CryptoKit'
+  s.weak_frameworks = 'AdServices', 'AppTrackingTransparency', 'AdSupport', 'StoreKit'
 end
