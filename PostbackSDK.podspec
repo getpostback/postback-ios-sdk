@@ -39,6 +39,6 @@ SOFTWARE.
   s.vendored_frameworks = 'PostbackSDK.xcframework'
   s.swift_version = '5.9'
 
-  s.frameworks = 'Foundation', 'UIKit', 'AdSupport', 'CoreTelephony', 'Metal', 'Network', 'WebKit', 'CoreGraphics', 'CryptoKit'
-  s.weak_frameworks = 'AdServices'
+  s.frameworks = 'Foundation', 'UIKit', 'Security', 'CryptoKit'
+  s.weak_frameworks = 'StoreKit', 'AdServices'
 end
